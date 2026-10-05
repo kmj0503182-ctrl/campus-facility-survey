@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#1F5BFF">
+<title>캠퍼스 시설 조사</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<style>
+  :root{
+    color-scheme: light;
+    /* Intelligent Blue */
+    --primary:#1F5BFF; --primary-600:#1A4EE0; --primary-700:#1640B8;
+    --primary-50:#EFF4FF; --primary-100:#DCE6FF; --primary-200:#B9CCFF;
+    --ring:0 0 0 4px rgba(31,91,255,.16);
+
+    --bg:#F4F6FA; --card:#FFFFFF; --surface:#F8FAFD;
+    --border:#E6EAF1; --border-strong:#D4DAE5;
+    --text:#0E1726; --text-2:#46536A; --text-dim:#8792A6;
+
+    --ok:#12B76A; --ok-ink:#067647; --ok-tint:#E9F8F0;
+    --warn:#F79009; --warn-ink:#B54708; --warn-tint:#FFF5E6;
+    --danger:#F04438; --danger-ink:#B42318; --danger-tint:#FEEFEE;
+    --collab:#7A5AF8; --collab-ink:#5925DC; --collab-tint:#F3F0FF;
+
+    --radius:18px; --radius-sm:12px;
+    --shadow-sm:0 1px 2px rgba(14,23,38,.04), 0 1px 3px rgba(14,23,38,.05);
+    --shadow-md:0 10px 30px -12px rgba(14,23,38,.12), 0 2px 6px -2px rgba(14,23,38,.05);
+    --shadow-primary:0 10px 22px -10px rgba(31,91,255,.65);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{-webkit-text-size-adjust:100%;}
+  body{
+    font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Malgun Gothic",sans-serif;
+    background:var(--bg); color:var(--text);
+    max-width:480px; margin:0 auto;
+    padding:0 16px calc(24px + env(safe-area-inset-bottom));
+    line-height:1.55; font-size:15px; letter-spacing:-.01em;
+    -webkit-font-smoothing:antialiased;
+    min-height:100vh;
+  }
+  svg.ic{width:18px; height:18px; flex:none; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round;}
+  .hidden{display:none !important;}
+
+  /* ---------- 헤더 ---------- */
+  .app-header{padding:22px 4px 18px;}
+  .brand{display:inline-flex; align-items:center; gap:8px; margin-bottom:14px;
+    font-size:12px; font-weight:700; color:var(--primary-700); letter-spacing:.02em;
+    background:var(--primary-50); border:1px solid var(--primary-100); padding:5px 10px 5px 6px; border-radius:99px;}
+  .brand-mark{width:20px; height:20px; border-radius:50%; background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center;}
+  .brand-mark svg.ic{width:12px; height:12px; stroke-width:2.6;}
+  h1{font-size:24px; font-weight:800; letter-spacing:-.03em; line-height:1.3;}
+  .sub{color:var(--text-dim); font-size:14px; margin-top:4px;}
+  .sub:empty{display:none;}
+
+  .section-label{font-size:12px; font-weight:700; color:var(--text-dim); letter-spacing:.04em; margin:4px 4px 10px;}
+
+  .card{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:20px; margin-bottom:12px; box-shadow:var(--shadow-md);}
+
+  /* ---------- 버튼 ---------- */
+  button{
+    font-family:inherit; font-size:15px; font-weight:600; letter-spacing:-.01em;
+    border-radius:var(--radius-sm); border:1px solid var(--border-strong);
+    background:var(--card); color:var(--text);
+    min-height:52px; padding:10px 16px; cursor:pointer; width:100%;
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    transition:background .15s ease, border-color .15s ease, color .15s ease, box-shadow .15s ease, transform .08s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  button:active:not(:disabled){transform:scale(.985);}
+  button:focus-visible{outline:none; box-shadow:var(--ring); border-color:var(--primary);}
+  button:disabled{opacity:.45; cursor:not-allowed;}
+  .btn-block{margin-bottom:10px;}
+  .btn-primary{background:var(--primary); color:#fff; border-color:var(--primary); box-shadow:var(--shadow-primary);}
+  .btn-primary:hover:not(:disabled){background:var(--primary-600); border-color:var(--primary-600);}
+  .btn-primary:disabled{background:#C3CEE6; border-color:#C3CEE6; color:#fff; opacity:1; box-shadow:none;}
+  .btn-soft{background:var(--primary-50); color:var(--primary-700); border-color:var(--primary-100);}
+  .btn-soft:hover:not(:disabled){background:var(--primary-100);}
+  .btn-ghost{background:transparent; border-color:transparent; color:var(--text-2); min-height:46px; font-size:14px;}
+  .btn-ghost:hover:not(:disabled){background:#EBEEF4;}
+
+  /* ---------- 목록 (담당자 / 건물 / 문항) ---------- */
+  .list-item{
+    display:flex; align-items:center; gap:14px; width:100%; text-align:left;
+    padding:14px 14px 14px 16px; background:var(--card); border:1px solid var(--border);
+    border-radius:var(--radius); margin-bottom:10px; cursor:pointer; min-height:72px;
+    box-shadow:var(--shadow-sm); font-weight:400;
+    transition:border-color .15s ease, box-shadow .15s ease, transform .08s ease;
+  }
+  .list-item:hover{border-color:var(--primary-200); box-shadow:var(--shadow-md);}
+  .list-item:active{transform:scale(.99);}
+  .list-item .li-body{flex:1; min-width:0; display:block;}
+  .list-item .name{display:block; font-weight:700; font-size:15.5px; color:var(--text);}
+  .list-item .role{display:block; font-size:12.5px; color:var(--text-dim); margin-top:2px; line-height:1.45;}
+  .list-item .chev{color:#B4BDCC;}
+  .avatar{width:44px; height:44px; border-radius:14px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--primary-50); color:var(--primary); font-weight:800; font-size:16px;}
+  .avatar svg.ic{width:20px; height:20px;}
+  .list-item.is-done .avatar{background:var(--ok-tint); color:var(--ok);}
+
+  .progress-wrap{width:84px; flex:none;}
+  .progress-track{height:6px; background:#EDF0F5; border-radius:99px; overflow:hidden;}
+  .progress-fill{height:100%; background:var(--primary); border-radius:99px;}
+  .list-item.is-done .progress-fill{background:var(--ok);}
+  .progress-label{font-size:11.5px; font-weight:600; color:var(--text-dim); text-align:right; margin-top:5px; font-variant-numeric:tabular-nums;}
+
+  .item-num-tag{flex:none; min-width:52px; padding:6px 8px; border-radius:10px; background:var(--surface);
+    border:1px solid var(--border); font-size:12.5px; font-weight:700; color:var(--text-2); text-align:center; font-variant-numeric:tabular-nums;}
+  .list-item.is-current{border-color:var(--primary); box-shadow:var(--ring);}
+
+  /* ---------- 문항 화면 ---------- */
+  .progress-panel{background:var(--card); border:1px solid var(--border); border-radius:var(--radius);
+    padding:14px 16px; margin-bottom:12px; box-shadow:var(--shadow-sm);}
+  .progress-head{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:10px;}
+  .progress-head .k{font-size:12.5px; font-weight:600; color:var(--text-dim);}
+  .top-progress-text{font-size:14px; font-weight:800; color:var(--primary); font-variant-numeric:tabular-nums;}
+  .top-progress-track{height:8px; background:#EDF0F5; border-radius:99px; overflow:hidden;}
+  .top-progress-fill{height:100%; border-radius:99px; transition:width .3s ease;
+    background:linear-gradient(90deg, #4C7DFF, var(--primary));}
+
+  .item-number{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:700; color:var(--primary-700);
+    background:var(--primary-50); border-radius:8px; padding:4px 9px; margin-bottom:12px; font-variant-numeric:tabular-nums;}
+  .item-number:empty{display:none;}
+  .item-number::before{content:"문항";  font-weight:600; color:var(--primary);}
+  .item-text{font-size:17px; font-weight:700; line-height:1.55; letter-spacing:-.02em; margin-bottom:20px; word-break:keep-all;}
+
+  .level-row{display:grid; grid-template-columns:repeat(2,1fr); gap:8px; margin-bottom:6px;}
+  .level-btn{min-height:54px; padding:10px 8px; font-size:14px; justify-content:flex-start; padding-left:14px; background:var(--surface); border-color:var(--border);}
+  .level-btn .dot{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(255,255,255,.9);}
+  .dot-ok{background:var(--ok);} .dot-warn{background:var(--warn);} .dot-danger{background:var(--danger);} .dot-collab{background:var(--collab);}
+  .level-btn:hover:not(:disabled){border-color:var(--border-strong); background:#fff;}
+  .level-btn.sel-적정{background:var(--ok-tint); border-color:var(--ok); color:var(--ok-ink); box-shadow:0 0 0 3px rgba(18,183,106,.14);}
+  .level-btn.sel-개선{background:var(--warn-tint); border-color:var(--warn); color:var(--warn-ink); box-shadow:0 0 0 3px rgba(247,144,9,.14);}
+  .level-btn.sel-미설치{background:var(--danger-tint); border-color:var(--danger); color:var(--danger-ink); box-shadow:0 0 0 3px rgba(240,68,56,.14);}
+  .level-btn.sel-외부{background:var(--collab-tint); border-color:var(--collab); color:var(--collab-ink); box-shadow:0 0 0 3px rgba(122,90,248,.14);}
+  .level-btn[class*="sel-"] .dot{box-shadow:0 0 0 3px rgba(255,255,255,.95), 0 0 0 4px currentColor;}
+
+  .reason-grid{display:flex; flex-direction:column; gap:8px;}
+  .reason-btn{position:relative; justify-content:flex-start; text-align:left; font-weight:500; font-size:14px;
+    min-height:48px; padding:10px 14px 10px 44px; line-height:1.4;}
+  .reason-btn::before{content:""; position:absolute; left:14px; top:50%; width:18px; height:18px; margin-top:-9px;
+    border-radius:50%; border:1.5px solid var(--border-strong); background:#fff; transition:all .15s ease;}
+  .reason-btn.selected{background:var(--primary-50); border-color:var(--primary); color:var(--primary-700); font-weight:700;}
+  .reason-btn.selected::before{border-color:var(--primary); background:var(--primary); box-shadow:inset 0 0 0 4px #fff;}
+
+  .field-group{margin-top:22px;}
+  label.field-label{display:flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:var(--text-2); margin-bottom:8px;}
+  label.field-label .opt{font-weight:500; color:var(--text-dim);}
+  textarea, input[type=text]{
+    width:100%; border:1px solid var(--border-strong); border-radius:var(--radius-sm);
+    padding:12px 14px; font-size:15px; font-family:inherit; background:#fff; color:var(--text);
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  textarea::placeholder, input[type=text]::placeholder{color:#A6AFBF;}
+  textarea:focus, input[type=text]:focus{outline:none; border-color:var(--primary); box-shadow:var(--ring);}
+  textarea{min-height:88px; resize:vertical;}
+
+  .photo-box{border:1.5px dashed var(--border-strong); background:var(--surface); border-radius:16px; padding:12px;}
+  .photo-hint{display:flex; flex-direction:column; align-items:center; gap:6px; padding:14px 8px 16px; color:var(--text-dim); font-size:13px; text-align:center;}
+  .photo-hint .hint-ic{width:40px; height:40px; border-radius:12px; background:#fff; border:1px solid var(--border);
+    display:flex; align-items:center; justify-content:center; color:var(--primary);}
+  .photo-list{display:flex; flex-direction:column; gap:8px; margin-bottom:10px;}
+  .photo-list:empty{display:none;}
+  .photo-list:not(:empty) + .photo-hint{display:none;}
+  .photo-item{display:flex; align-items:center; gap:8px; padding:8px; background:#fff; border:1px solid var(--border); border-radius:14px; box-shadow:var(--shadow-sm);}
+  .photo-item img{width:56px; height:56px; object-fit:cover; border-radius:10px; flex:none; background:var(--surface);}
+  .photo-item input[type=text]{flex:1; min-width:0; padding:9px 10px; font-size:13.5px; border-color:var(--border);}
+  .photo-num{width:20px; height:20px; flex:none; display:flex; align-items:center; justify-content:center;
+    font-size:11px; font-weight:800; color:#fff; background:var(--primary); border-radius:50%;}
+  .photo-move{display:flex; flex-direction:column; gap:3px; flex:none;}
+  .photo-move button{
+    width:28px; height:24px; min-height:0; padding:0; border-radius:7px;
+    font-size:9px; line-height:1; color:var(--text-2); background:var(--surface); border-color:var(--border);
+  }
+  .photo-item .remove-btn{
+    width:30px; height:30px; min-height:0; flex:none; border-radius:50%;
+    background:var(--danger-tint); color:var(--danger-ink); border:1px solid transparent;
+    font-size:16px; font-weight:700; line-height:1; padding:0;
+  }
+  .photo-btn-row{display:flex; gap:8px;}
+  .photo-btn-row button{flex:1; font-size:14px; min-height:46px; background:#fff;}
+  .photo-btn-row button svg.ic{color:var(--primary);}
+
+  .action-bar{position:sticky; bottom:0; z-index:5; display:flex; gap:8px;
+    padding:12px 0 calc(12px + env(safe-area-inset-bottom));
+    margin:0 -2px; background:linear-gradient(to top, var(--bg) 72%, rgba(244,246,250,0));}
+  .action-bar #btn-prev{flex:1;}
+  .action-bar #btn-next{flex:2;}
+  .sub-actions{display:flex; gap:4px;}
+  .sub-actions button{flex:1;}
+
+  /* ---------- 알림 ---------- */
+  .alert{display:flex; gap:8px; align-items:flex-start; padding:12px 14px; border-radius:14px; font-size:14px; margin-bottom:12px; font-weight:500;}
+  .alert::before{content:"!"; flex:none; width:20px; height:20px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+    font-size:12px; font-weight:800; color:#fff; margin-top:1px;}
+  .alert-danger{background:var(--danger-tint); color:var(--danger-ink); border:1px solid #FBD0CC;}
+  .alert-danger::before{background:var(--danger);}
+  .alert-warn{background:var(--warn-tint); color:var(--warn-ink); border:1px solid #FDDCAB;}
+  .alert-warn::before{background:var(--warn);}
+
+  /* ---------- 종합 문항 ---------- */
+  .summary-head{display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;}
+  .summary-count{font-size:12.5px; font-weight:700; color:var(--primary-700); background:var(--primary-50); border-radius:99px; padding:4px 10px; font-variant-numeric:tabular-nums;}
+  .summary-count.full{background:var(--primary); color:#fff;}
+  .checkbox-item{display:flex; align-items:flex-start; gap:12px; padding:14px; border:1px solid var(--border);
+    border-radius:14px; margin-bottom:8px; cursor:pointer; font-size:14.5px; line-height:1.45; background:#fff;
+    transition:border-color .15s ease, background .15s ease;}
+  .checkbox-item:hover{border-color:var(--border-strong);}
+  .checkbox-item.selected{border-color:var(--primary); background:var(--primary-50); color:var(--primary-700); font-weight:600;}
+  .checkbox-item input{margin-top:1px; width:18px; height:18px; flex:none; accent-color:var(--primary); pointer-events:none;}
+
+  /* ---------- 완료 화면 ---------- */
+  .complete-card{text-align:center; padding:36px 20px 28px;}
+  .complete-icon{width:72px; height:72px; border-radius:50%; background:var(--primary); color:#fff;
+    display:flex; align-items:center; justify-content:center; margin:0 auto 18px;
+    box-shadow:0 0 0 10px var(--primary-50), var(--shadow-primary);}
+  .complete-icon svg.ic{width:34px; height:34px; stroke-width:2.6;}
+  .complete-title{font-weight:800; font-size:19px; letter-spacing:-.02em; margin-bottom:4px; word-break:keep-all;}
+
+  .status-badge{font-size:11.5px; font-weight:700; padding:5px 10px; border-radius:99px; white-space:nowrap; flex:none;}
+  .status-badge.st-적정{background:var(--ok-tint); color:var(--ok-ink);}
+  .status-badge.st-개선{background:var(--warn-tint); color:var(--warn-ink);}
+  .status-badge.st-미설치{background:var(--danger-tint); color:var(--danger-ink);}
+  .status-badge.st-외부{background:var(--collab-tint); color:var(--collab-ink);}
+  .status-badge.st-none{background:#EEF1F5; color:var(--text-dim);}
+
+  .loading{display:flex; align-items:center; gap:10px; color:var(--text-dim); font-size:14px; padding:18px 4px;}
+  .spinner{width:18px; height:18px; border-radius:50%; border:2.5px solid var(--primary-100); border-top-color:var(--primary); animation:spin .8s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .screen{animation:fadeUp .25s ease;}
+  @keyframes fadeUp{from{opacity:0; transform:translateY(6px);} to{opacity:1; transform:none;}}
+  @media (prefers-reduced-motion: reduce){ .screen, .spinner{animation:none;} * {transition:none !important;} }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <span class="brand-mark" aria-hidden="true"><svg class="ic" viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg></span>
+    Barrier-Free 캠퍼스 조사
+  </div>
+  <h1 id="page-title">캠퍼스 시설 조사</h1>
+  <div class="sub" id="page-sub">담당자를 선택해 주세요</div>
+</header>
+
+<main>
+<div id="alert-box" role="alert" aria-live="polite"></div>
+
+<!-- 1단계: 담당자 선택 -->
+<section id="screen-assessor" class="screen">
+  <div class="section-label">담당자</div>
+  <div id="assessor-list"><div class="loading"><span class="spinner"></span>불러오는 중...</div></div>
+</section>
+
+<!-- 2단계: 건물 선택 -->
+<section id="screen-buildings" class="screen hidden">
+  <div class="section-label">담당 건물</div>
+  <div id="building-list"></div>
+  <button class="btn-block btn-soft" onclick="goToSummaryScreen()" id="btn-summary-entry" style="display:none;">캠퍼스 종합 문항 응답하기</button>
+  <button class="btn-block btn-ghost" onclick="showAssessorScreen()">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+    담당자 다시 선택
+  </button>
+</section>
+
+<!-- 3단계: 문항 응답 -->
+<section id="screen-item" class="screen hidden">
+  <div class="progress-panel">
+    <div class="progress-head">
+      <span class="k">진행 상황</span>
+      <span class="top-progress-text" id="top-progress-text"></span>
+    </div>
+    <div class="top-progress-track"><div class="top-progress-fill" id="top-progress-fill"></div></div>
+  </div>
+
+  <div class="card">
+    <div class="item-number" id="item-number"></div>
+    <div class="item-text" id="item-text"></div>
+
+    <label class="field-label">적정 수준</label>
+    <div class="level-row">
+      <button class="level-btn" id="level-적정" onclick="selectLevel('적정')"><span class="dot dot-ok"></span>적정</button>
+      <button class="level-btn" id="level-개선 필요" onclick="selectLevel('개선 필요')"><span class="dot dot-warn"></span>개선 필요</button>
+      <button class="level-btn" id="level-미설치" onclick="selectLevel('미설치')"><span class="dot dot-danger"></span>미설치</button>
+      <button class="level-btn" id="level-외부 협조 필요" onclick="selectLevel('외부 협조 필요')"><span class="dot dot-collab"></span>외부 협조 필요</button>
+    </div>
+
+    <div id="reason-section" class="field-group hidden">
+      <label class="field-label">가장 개선이 필요한 사항 <span class="opt">1개 선택</span></label>
+      <div class="reason-grid" id="reason-grid"></div>
+    </div>
+
+    <div id="dept-section" class="field-group hidden">
+      <label class="field-label" for="dept-input">협조가 필요한 부서</label>
+      <input type="text" id="dept-input" placeholder="예: 시설팀">
+    </div>
+
+    <div class="field-group">
+      <label class="field-label">현장 사진 <span class="opt">여러 장 가능 · 사진별 메모</span></label>
+      <div class="photo-box">
+        <div id="photo-list" class="photo-list"></div>
+        <div class="photo-hint">
+          <span class="hint-ic"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg></span>
+          현장 사진을 촬영하거나 앨범에서 추가하세요
+        </div>
+        <div class="photo-btn-row">
+          <input type="file" accept="image/*" capture="environment" id="camera-input" onchange="handlePhoto(event)" style="display:none;">
+          <input type="file" accept="image/*" multiple id="album-input" onchange="handlePhoto(event)" style="display:none;">
+          <button type="button" onclick="document.getElementById('camera-input').click()">
+            <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/></svg>
+            사진 촬영
+          </button>
+          <button type="button" onclick="document.getElementById('album-input').click()">
+            <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            앨범에서 선택
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label class="field-label" for="note-input">비고 <span class="opt">선택</span></label>
+      <textarea id="note-input" placeholder="특이사항을 자유롭게 적어주세요"></textarea>
+    </div>
+  </div>
+
+  <div class="action-bar">
+    <button id="btn-prev" onclick="goPrev()">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg>
+      이전
+    </button>
+    <button class="btn-primary" id="btn-next" onclick="clickNext()" disabled>다음</button>
+  </div>
+  <div class="sub-actions">
+    <button class="btn-ghost" onclick="showBuildingScreen()">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+      건물 목록
+    </button>
+    <button class="btn-ghost" onclick="goToItemList()">
+      <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h.01M3 18h.01M3 6h.01M8 12h13M8 18h13M8 6h13"/></svg>
+      문항 전체 보기
+    </button>
+  </div>
+</section>
+
+<!-- 3-보조단계: 문항 전체 보기 -->
+<section id="screen-item-list" class="screen hidden">
+  <div id="item-list-box"></div>
+  <button class="btn-block btn-ghost" onclick="renderItemScreen()">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+    뒤로
+  </button>
+</section>
+
+<!-- 4단계: 건물 완료 -->
+<section id="screen-complete" class="screen hidden">
+  <div class="card complete-card">
+    <div class="complete-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <div class="complete-title" id="complete-title"></div>
+    <div class="sub" id="complete-sub"></div>
+  </div>
+  <button class="btn-primary btn-block" onclick="showBuildingScreen()">다른 건물 조사하기</button>
+  <button class="btn-block btn-soft hidden" id="btn-goto-summary" onclick="goToSummaryScreen()">캠퍼스 종합 문항 응답하기</button>
+</section>
+
+<!-- 5단계: 캠퍼스 종합 문항 -->
+<section id="screen-summary" class="screen hidden">
+  <div class="card">
+    <div class="summary-head">
+      <div class="item-number" style="margin-bottom:0;">3.10.3</div>
+      <span class="summary-count" id="summary-count">0 / 2 선택</span>
+    </div>
+    <div class="item-text">무장애(Barrier-Free) 환경 조성을 위해 현재 가장 개선이 필요한 사항을 2개 선택해 주십시오.</div>
+    <div id="summary-options"></div>
+  </div>
+  <button class="btn-primary btn-block" id="btn-summary-submit" onclick="submitSummary()" disabled>제출</button>
+  <button class="btn-block btn-ghost" onclick="showAssessorScreen()">
+    <svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+    처음으로
+  </button>
+</section>
+
+<!-- 완료(종합) -->
+<section id="screen-summary-done" class="screen hidden">
+  <div class="card complete-card">
+    <div class="complete-icon"><svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg></div>
+    <div class="complete-title">종합 의견이 제출되었습니다</div>
+    <div class="sub">소중한 응답 감사합니다</div>
+  </div>
+  <button class="btn-primary btn-block" onclick="showAssessorScreen()">처음으로</button>
+</section>
+</main>
+
+<script>
+  let currentAssessor = null;
+  let currentBuilding = null;
+  let items = [];          // 현재 건물의 문항 목록
+  let currentIndex = 0;
+  let selectedLevel = '';
+  let selectedReason = '';
+  let currentPhotos = [];  // 현재 문항의 사진 목록: [{src, memo}], src는 기존 URL 또는 새로 찍은 data:URL
+  let saving = false;
+  let photoChain = Promise.resolve(); // 사진을 선택한 순서대로 하나씩 처리하기 위한 작업 줄
+  let photoProcessing = 0;            // 처리 중인 사진 수 (0보다 크면 다음/이전 버튼 잠금)
+
+  let summarySelected = [];
+  let summaryOptions = [];
+
+  const ICON_CHEVRON = '<svg class="ic chev" viewBox="0 0 24 24" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg>';
+  const ICON_BUILDING = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg>';
+  const ICON_CHECK = '<svg class="ic" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>';
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  window.onload = function () {
+    google.script.run.withSuccessHandler(renderAssessors).withFailureHandler(showFatalError).getAssignments();
+  };
+
+  function showAlert(msg, type) {
+    const box = document.getElementById('alert-box');
+    box.innerHTML = '<div class="alert alert-' + (type || 'danger') + '">' + msg + '</div>';
+  }
+  function clearAlert() {
+    document.getElementById('alert-box').innerHTML = '';
+  }
+  function showFatalError(err) {
+    showAlert('데이터를 불러오지 못했습니다: ' + err.message, 'danger');
+  }
+
+  function levelClass(level) {
+    if (level === '개선 필요') return 'sel-개선';
+    if (level === '적정') return 'sel-적정';
+    if (level === '미설치') return 'sel-미설치';
+    if (level === '외부 협조 필요') return 'sel-외부';
+    return '';
+  }
+
+  const ALL_LEVELS = ['적정', '개선 필요', '미설치', '외부 협조 필요'];
+
+  function hideAllScreens() {
+    ['screen-assessor','screen-buildings','screen-item','screen-item-list','screen-complete','screen-summary','screen-summary-done']
+      .forEach(function (id) { document.getElementById(id).classList.add('hidden'); });
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- 1단계: 담당자 선택 ---------- */
+  let ASSIGNMENTS = {};
+  function renderAssessors(data) {
+    ASSIGNMENTS = data.assignments;
+    const box = document.getElementById('assessor-list');
+    box.innerHTML = '';
+    Object.keys(ASSIGNMENTS).forEach(function (name) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'list-item';
+      const count = (ASSIGNMENTS[name] || []).length;
+      btn.innerHTML =
+        '<span class="avatar">' + esc(name.charAt(0)) + '</span>' +
+        '<span class="li-body"><span class="name">' + esc(name) + '</span>' +
+        '<span class="role">담당 건물 ' + count + '곳</span></span>' + ICON_CHEVRON;
+      btn.onclick = function () { selectAssessor(name); };
+      box.appendChild(btn);
+    });
+    showAssessorScreen();
+  }
+  function showAssessorScreen() {
+    clearAlert();
+    hideAllScreens();
+    document.getElementById('page-title').textContent = '캠퍼스 시설 조사';
+    document.getElementById('page-sub').textContent = '담당자를 선택해 주세요';
+    document.getElementById('screen-assessor').classList.remove('hidden');
+  }
+
+  function selectAssessor(name) {
+    currentAssessor = name;
+    showBuildingScreen();
+  }
+
+  /* ---------- 2단계: 건물 선택 ---------- */
+  function showBuildingScreen() {
+    clearAlert();
+    hideAllScreens();
+    document.getElementById('page-title').textContent = currentAssessor + '님';
+    document.getElementById('page-sub').textContent = '조사할 건물을 선택해 주세요';
+    document.getElementById('screen-buildings').classList.remove('hidden');
+    document.getElementById('btn-summary-entry').style.display = 'none';
+    document.getElementById('building-list').innerHTML = '<div class="loading"><span class="spinner"></span>불러오는 중...</div>';
+    google.script.run.withSuccessHandler(renderBuildings).withFailureHandler(showFatalError).getAssessorOverview(currentAssessor);
+  }
+
+  function renderBuildings(overview) {
+    const box = document.getElementById('building-list');
+    box.innerHTML = '';
+    overview.buildings.forEach(function (b) {
+      const pct = b.total > 0 ? Math.round((b.done / b.total) * 100) : 0;
+      const done = b.total > 0 && b.done === b.total;
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'list-item' + (done ? ' is-done' : '');
+      row.onclick = function () { selectBuilding(b.building); };
+      row.innerHTML =
+        '<span class="avatar">' + (done ? ICON_CHECK : ICON_BUILDING) + '</span>' +
+        '<span class="li-body"><span class="name">' + esc(b.building) + '</span><span class="role">' + esc(b.role || '') + '</span></span>' +
+        '<span class="progress-wrap">' +
+          '<span class="progress-track" style="display:block;"><span class="progress-fill" style="display:block; width:' + pct + '%;"></span></span>' +
+          '<span class="progress-label" style="display:block;">' + b.done + ' / ' + b.total + '</span>' +
+        '</span>';
+      box.appendChild(row);
+    });
+    document.getElementById('btn-summary-entry').style.display = overview.allDone ? 'flex' : 'none';
+  }
+
+  /* ---------- 3단계: 문항 응답 ---------- */
+  function selectBuilding(building) {
+    currentBuilding = building;
+    clearAlert();
+    google.script.run.withSuccessHandler(startBuilding).withFailureHandler(showFatalError).getBuildingProgress(building);
+  }
+
+  function startBuilding(res) {
+    if (!res.ok) { showAlert(res.message, 'danger'); return; }
+    items = res.items;
+    if (items.length === 0) {
+      showAlert('이 건물에 배정된 문항이 없습니다.', 'warn');
+      return;
+    }
+    let firstUnanswered = items.findIndex(function (it) { return !it.적정수준; });
+    // 전부 응답했으면 처음 문항부터, 아니면 아직 안 한 문항부터 시작. 이전/다음으로 자유롭게 이동 가능.
+    currentIndex = firstUnanswered === -1 ? 0 : firstUnanswered;
+    renderItemScreen();
+  }
+
+  function renderItemScreen() {
+    hideAllScreens();
+    document.getElementById('page-title').textContent = currentBuilding;
+    document.getElementById('page-sub').textContent = '';
+    document.getElementById('screen-item').classList.remove('hidden');
+
+    const item = items[currentIndex];
+    document.getElementById('item-number').textContent = item.번호;
+    document.getElementById('item-text').textContent = item.내용;
+
+    selectedLevel = item.적정수준 || '';
+    selectedReason = item.개선사유 || '';
+    currentPhotos = item.사진URL ? item.사진URL.split('\n').filter(function (u) { return u; }).map(function (line) {
+      const sep = line.indexOf(' | ');
+      if (sep === -1) return { src: line, memo: '' };
+      return { src: line.substring(0, sep), memo: line.substring(sep + 3) };
+    }) : [];
+    renderPhotoList();
+
+    document.getElementById('note-input').value = item.비고 || '';
+
+    ALL_LEVELS.forEach(function (lv) {
+      document.getElementById('level-' + lv).className = 'level-btn';
+    });
+    if (selectedLevel) {
+      document.getElementById('level-' + selectedLevel).classList.add(levelClass(selectedLevel));
+    }
+
+    renderSubSections(item);
+    updateProgressBar();
+    updateNextButtonState();
+  }
+
+  function renderPhotoList() {
+    const box = document.getElementById('photo-list');
+    box.innerHTML = '';
+    currentPhotos.forEach(function (photo, idx) {
+      const row = document.createElement('div');
+      row.className = 'photo-item';
+
+      const num = document.createElement('div');
+      num.className = 'photo-num';
+      num.textContent = idx + 1;
+
+      const img = document.createElement('img');
+      img.src = photo.src;
+      img.alt = '현장 사진 ' + (idx + 1);
+
+      const memoInput = document.createElement('input');
+      memoInput.type = 'text';
+      memoInput.placeholder = '사진 메모 (선택)';
+      memoInput.value = photo.memo || '';
+      memoInput.oninput = function (e) { currentPhotos[idx].memo = e.target.value; };
+
+      const moveBox = document.createElement('div');
+      moveBox.className = 'photo-move';
+      const upBtn = document.createElement('button');
+      upBtn.type = 'button';
+      upBtn.textContent = '▲';
+      upBtn.setAttribute('aria-label', '위로 이동');
+      upBtn.disabled = idx === 0;
+      upBtn.onclick = function () { movePhoto(idx, -1); };
+      const downBtn = document.createElement('button');
+      downBtn.type = 'button';
+      downBtn.textContent = '▼';
+      downBtn.setAttribute('aria-label', '아래로 이동');
+      downBtn.disabled = idx === currentPhotos.length - 1;
+      downBtn.onclick = function () { movePhoto(idx, 1); };
+      moveBox.appendChild(upBtn);
+      moveBox.appendChild(downBtn);
+
+      const delBtn = document.createElement('button');
+      delBtn.type = 'button';
+      delBtn.className = 'remove-btn';
+      delBtn.textContent = '×';
+      delBtn.setAttribute('aria-label', '사진 삭제');
+      delBtn.onclick = function () { removePhoto(idx); };
+
+      row.appendChild(num);
+      row.appendChild(img);
+      row.appendChild(memoInput);
+      row.appendChild(moveBox);
+      row.appendChild(delBtn);
+      box.appendChild(row);
+    });
+  }
+
+  function removePhoto(idx) {
+    currentPhotos.splice(idx, 1);
+    renderPhotoList();
+  }
+
+  function movePhoto(idx, delta) {
+    const to = idx + delta;
+    if (to < 0 || to >= currentPhotos.length) return;
+    const tmp = currentPhotos[idx];
+    currentPhotos[idx] = currentPhotos[to];
+    currentPhotos[to] = tmp;
+    renderPhotoList();
+  }
+
+  function renderSubSections(item) {
+    const reasonSection = document.getElementById('reason-section');
+    const deptSection = document.getElementById('dept-section');
+    reasonSection.classList.add('hidden');
+    deptSection.classList.add('hidden');
+
+    if (selectedLevel === '개선 필요') {
+      reasonSection.classList.remove('hidden');
+      const grid = document.getElementById('reason-grid');
+      grid.innerHTML = '';
+      (item.사유목록 || []).forEach(function (r) {
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'reason-btn' + (r === selectedReason ? ' selected' : '');
+        btn.textContent = r;
+        btn.onclick = function () { selectReason(r); };
+        grid.appendChild(btn);
+      });
+    } else if (selectedLevel === '외부 협조 필요') {
+      deptSection.classList.remove('hidden');
+      const input = document.getElementById('dept-input');
+      input.value = selectedReason || '';
+      input.oninput = function (e) { selectedReason = e.target.value; updateNextButtonState(); };
+    }
+  }
+
+  function selectLevel(level) {
+    const prevLevel = selectedLevel;
+    selectedLevel = level;
+    if (level !== prevLevel) {
+      selectedReason = (level === '외부 협조 필요') ? '시설팀' : '';
+    }
+    renderItemScreen_levelOnly();
+  }
+
+  function renderItemScreen_levelOnly() {
+    ALL_LEVELS.forEach(function (lv) {
+      document.getElementById('level-' + lv).className = 'level-btn';
+    });
+    document.getElementById('level-' + selectedLevel).classList.add(levelClass(selectedLevel));
+    renderSubSections(items[currentIndex]);
+    updateNextButtonState();
+  }
+
+  function selectReason(reason) {
+    selectedReason = reason;
+    renderSubSections(items[currentIndex]);
+    updateNextButtonState();
+  }
+
+  function updateNextButtonState() {
+    let ok = !!selectedLevel;
+    if ((selectedLevel === '개선 필요' || selectedLevel === '외부 협조 필요') && !selectedReason) ok = false;
+    const busy = saving || photoProcessing > 0;
+    const nextBtn = document.getElementById('btn-next');
+    nextBtn.disabled = !ok || busy;
+    if (!saving) nextBtn.textContent = photoProcessing > 0 ? '사진 처리 중...' : (currentIndex >= items.length - 1 ? '저장하고 완료' : '다음');
+    document.getElementById('btn-prev').disabled = currentIndex === 0 || busy;
+  }
+
+  function goPrev() {
+    if (saving || photoProcessing > 0 || currentIndex === 0) return;
+    currentIndex--;
+    renderItemScreen();
+  }
+
+  function updateProgressBar() {
+    const total = items.length;
+    const n = currentIndex + 1;
+    document.getElementById('top-progress-fill').style.width = Math.round((currentIndex / total) * 100) + '%';
+    document.getElementById('top-progress-text').textContent = n + ' / ' + total;
+  }
+
+  /* 사진 파일 하나를 읽어 최대 1280px JPEG(data:URL)로 줄여서 돌려준다. */
+  function compressImageFile(file) {
+    return new Promise(function (resolve, reject) {
+      const reader = new FileReader();
+      reader.onerror = function () { reject(new Error('사진을 읽지 못했습니다')); };
+      reader.onload = function (evt) {
+        const img = new Image();
+        img.onerror = function () { reject(new Error('사진을 열지 못했습니다')); };
+        img.onload = function () {
+          let w = img.width, h = img.height;
+          const maxDim = 1280;
+          if (w > maxDim || h > maxDim) {
+            if (w > h) { h = Math.round(h * maxDim / w); w = maxDim; }
+            else { w = Math.round(w * maxDim / h); h = maxDim; }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = w; canvas.height = h;
+          canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+          resolve(canvas.toDataURL('image/jpeg', 0.75));
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+  }
+
+  /* 선택한 순서대로 한 장씩 처리해 목록 끝에 추가한다. (동시에 처리하면 용량이 작은 사진이 먼저 들어가 순서가 섞임) */
+  function handlePhoto(e) {
+    const input = e.target;
+    const files = Array.prototype.slice.call(input.files || []);
+    if (!files.length) return;
+    const startBuilding = currentBuilding;
+    const startIndex = currentIndex;
+
+    files.forEach(function (file) {
+      photoProcessing++;
+      updateNextButtonState();
+      photoChain = photoChain
+        .then(function () { return compressImageFile(file); })
+        .then(function (dataUrl) {
+          // 처리 중에 다른 문항·건물로 이동했다면 엉뚱한 곳에 붙지 않도록 버린다.
+          if (currentBuilding === startBuilding && currentIndex === startIndex) {
+            currentPhotos.push({ src: dataUrl, memo: '' });
+            renderPhotoList();
+          }
+        })
+        .catch(function (err) {
+          showAlert('사진 처리 실패: ' + err.message, 'danger');
+        })
+        .then(function () {
+          photoProcessing--;
+          updateNextButtonState();
+        });
+    });
+
+    // 파일 읽기가 모두 끝난 뒤에 입력값을 비워, 같은 파일을 다시 선택할 수 있게 한다.
+    photoChain = photoChain.then(function () { input.value = ''; });
+  }
+
+  function clickNext() {
+    if (saving || photoProcessing > 0) return;
+    saving = true;
+    clearAlert();
+    document.getElementById('btn-next').disabled = true;
+    document.getElementById('btn-next').innerHTML = '<span class="spinner" style="border-color:rgba(255,255,255,.35); border-top-color:#fff;"></span>저장 중...';
+
+    const item = items[currentIndex];
+    const note = document.getElementById('note-input').value;
+
+    google.script.run
+      .withSuccessHandler(onSaveSuccess)
+      .withFailureHandler(onSaveError)
+      .saveAnswer(currentBuilding, item.번호, selectedLevel, selectedReason, currentPhotos, note, currentAssessor);
+  }
+
+  function onSaveSuccess(res) {
+    saving = false;
+    document.getElementById('btn-next').textContent = '다음';
+    if (!res.ok) {
+      showAlert(res.message, 'danger');
+      updateNextButtonState();
+      return;
+    }
+    items[currentIndex].적정수준 = selectedLevel;
+    items[currentIndex].개선사유 = selectedReason;
+    items[currentIndex].사진URL = res.photoCell || '';
+
+    if (currentIndex >= items.length - 1) {
+      showCompleteScreen();
+    } else {
+      currentIndex++;
+      renderItemScreen();
+    }
+  }
+
+  function onSaveError(err) {
+    saving = false;
+    document.getElementById('btn-next').textContent = '다음';
+    showAlert('저장 실패: ' + err.message + ' (다시 시도해 주세요)', 'danger');
+    updateNextButtonState();
+  }
+
+  /* ---------- 3-보조단계: 문항 전체 보기 ---------- */
+  function statusBadgeClass(level) {
+    if (level === '개선 필요') return 'st-개선';
+    if (level === '적정') return 'st-적정';
+    if (level === '미설치') return 'st-미설치';
+    if (level === '외부 협조 필요') return 'st-외부';
+    return 'st-none';
+  }
+
+  function goToItemList() {
+    clearAlert();
+    hideAllScreens();
+    document.getElementById('page-title').textContent = currentBuilding;
+    const answered = items.filter(function (it) { return it.적정수준; }).length;
+    document.getElementById('page-sub').textContent = '전체 문항 · ' + answered + ' / ' + items.length + ' 응답 (탭하면 이동)';
+    document.getElementById('screen-item-list').classList.remove('hidden');
+
+    const box = document.getElementById('item-list-box');
+    box.innerHTML = '';
+    items.forEach(function (it, idx) {
+      const row = document.createElement('button');
+      row.type = 'button';
+      row.className = 'list-item' + (idx === currentIndex ? ' is-current' : '');
+      row.onclick = function () { currentIndex = idx; renderItemScreen(); };
+
+      const numEl = document.createElement('span');
+      numEl.className = 'item-num-tag';
+      numEl.textContent = it.번호;
+
+      const left = document.createElement('span');
+      left.className = 'li-body';
+      const textEl = document.createElement('span');
+      textEl.className = 'role';
+      textEl.style.color = 'var(--text-2)';
+      textEl.style.marginTop = '0';
+      textEl.textContent = it.내용.length > 42 ? it.내용.slice(0, 42) + '…' : it.내용;
+      left.appendChild(textEl);
+
+      const badge = document.createElement('span');
+      badge.className = 'status-badge ' + statusBadgeClass(it.적정수준);
+      badge.textContent = it.적정수준 || '미응답';
+
+      row.appendChild(numEl);
+      row.appendChild(left);
+      row.appendChild(badge);
+      box.appendChild(row);
+    });
+  }
+
+  /* ---------- 4단계: 건물 완료 ---------- */
+  function showCompleteScreen() {
+    hideAllScreens();
+    document.getElementById('page-title').textContent = currentBuilding;
+    document.getElementById('page-sub').textContent = '';
+    document.getElementById('screen-complete').classList.remove('hidden');
+    document.getElementById('complete-title').textContent = currentBuilding + ' 조사가 완료되었습니다';
+    document.getElementById('complete-sub').textContent = items.length + '/' + items.length + ' 문항 응답 완료';
+
+    google.script.run.withSuccessHandler(function (overview) {
+      document.getElementById('btn-goto-summary').classList.toggle('hidden', !overview.allDone);
+    }).getAssessorOverview(currentAssessor);
+  }
+
+  /* ---------- 5단계: 캠퍼스 종합 문항 ---------- */
+  function goToSummaryScreen() {
+    clearAlert();
+    hideAllScreens();
+    document.getElementById('page-title').textContent = '캠퍼스 종합 문항';
+    document.getElementById('page-sub').textContent = '';
+    document.getElementById('screen-summary').classList.remove('hidden');
+    summarySelected = [];
+    document.getElementById('summary-options').innerHTML = '<div class="loading"><span class="spinner"></span>불러오는 중...</div>';
+    google.script.run.withSuccessHandler(renderSummaryOptions).withFailureHandler(showFatalError).getSummaryOptions();
+  }
+
+  function renderSummaryOptions(options) {
+    summaryOptions = options;
+    const box = document.getElementById('summary-options');
+    box.innerHTML = '';
+    options.forEach(function (opt, idx) {
+      const row = document.createElement('div');
+      row.className = 'checkbox-item';
+      row.onclick = function () { toggleSummaryOption(idx); };
+      row.id = 'summary-opt-' + idx;
+      row.innerHTML = '<input type="checkbox" id="chk-' + idx + '" tabindex="-1"><div>' + esc(opt) + '</div>';
+      box.appendChild(row);
+    });
+    updateSummarySubmitState();
+  }
+
+  function toggleSummaryOption(idx) {
+    const pos = summarySelected.indexOf(idx);
+    if (pos !== -1) {
+      summarySelected.splice(pos, 1);
+    } else {
+      if (summarySelected.length >= 2) return; // 2개 초과 선택 불가
+      summarySelected.push(idx);
+    }
+    summaryOptions.forEach(function (_, i) {
+      const row = document.getElementById('summary-opt-' + i);
+      const checked = summarySelected.indexOf(i) !== -1;
+      row.classList.toggle('selected', checked);
+      document.getElementById('chk-' + i).checked = checked;
+    });
+    updateSummarySubmitState();
+  }
+
+  function updateSummarySubmitState() {
+    document.getElementById('btn-summary-submit').disabled = summarySelected.length !== 2;
+    const counter = document.getElementById('summary-count');
+    counter.textContent = summarySelected.length + ' / 2 선택';
+    counter.classList.toggle('full', summarySelected.length === 2);
+  }
+
+  function submitSummary() {
+    if (summarySelected.length !== 2) return;
+    document.getElementById('btn-summary-submit').disabled = true;
+    document.getElementById('btn-summary-submit').textContent = '제출 중...';
+    const c1 = summaryOptions[summarySelected[0]];
+    const c2 = summaryOptions[summarySelected[1]];
+    google.script.run
+      .withSuccessHandler(function () {
+        hideAllScreens();
+        document.getElementById('btn-summary-submit').textContent = '제출';
+        document.getElementById('screen-summary-done').classList.remove('hidden');
+      })
+      .withFailureHandler(function (err) {
+        document.getElementById('btn-summary-submit').disabled = false;
+        document.getElementById('btn-summary-submit').textContent = '제출';
+        showAlert('제출 실패: ' + err.message, 'danger');
+      })
+      .saveSummary(c1, c2, currentAssessor);
+  }
+</script>
+</body>
+</html>
