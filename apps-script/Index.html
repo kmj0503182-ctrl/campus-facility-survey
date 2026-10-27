@@ -138,7 +138,7 @@
   .level-btn{min-height:54px; padding:10px 8px; font-size:14px; justify-content:flex-start; padding-left:14px; background:var(--surface); border-color:var(--border);}
   .level-btn .dot{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(255,255,255,.9);}
   .dot-ok{background:var(--ok);} .dot-warn{background:var(--warn);} .dot-danger{background:var(--danger);} .dot-collab{background:var(--collab);} .dot-na{background:var(--na);}
-  .level-row [id="level-해당 없음"]{grid-column:1 / -1;}
+  #level-해당-없음{grid-column:1 / -1;}
   .level-btn:hover:not(:disabled){border-color:var(--border-strong); background:#fff;}
   .level-btn.sel-적정{background:var(--ok-tint); border-color:var(--ok); color:var(--ok-ink); box-shadow:0 0 0 3px rgba(18,183,106,.14);}
   .level-btn.sel-개선{background:var(--warn-tint); border-color:var(--warn); color:var(--warn-ink); box-shadow:0 0 0 3px rgba(247,144,9,.14);}
@@ -294,10 +294,10 @@
     <label class="field-label">적정 수준</label>
     <div class="level-row">
       <button class="level-btn" id="level-적정" onclick="selectLevel('적정')"><span class="dot dot-ok"></span>적정</button>
-      <button class="level-btn" id="level-개선 필요" onclick="selectLevel('개선 필요')"><span class="dot dot-warn"></span>개선 필요</button>
+      <button class="level-btn" id="level-개선-필요" onclick="selectLevel('개선 필요')"><span class="dot dot-warn"></span>개선 필요</button>
       <button class="level-btn" id="level-미설치" onclick="selectLevel('미설치')"><span class="dot dot-danger"></span>미설치</button>
-      <button class="level-btn" id="level-외부 협조 필요" onclick="selectLevel('외부 협조 필요')"><span class="dot dot-collab"></span>외부 협조 필요</button>
-      <button class="level-btn" id="level-해당 없음" onclick="selectLevel('해당 없음')"><span class="dot dot-na"></span>해당 없음</button>
+      <button class="level-btn" id="level-외부-협조-필요" onclick="selectLevel('외부 협조 필요')"><span class="dot dot-collab"></span>외부 협조 필요</button>
+      <button class="level-btn" id="level-해당-없음" onclick="selectLevel('해당 없음')"><span class="dot dot-na"></span>해당 없음</button>
     </div>
 
     <div id="reason-section" class="field-group hidden">
@@ -470,6 +470,10 @@
     showAlert('데이터를 불러오지 못했습니다: ' + err.message, 'danger');
   }
 
+  function levelButtonId(level) {
+    return 'level-' + String(level == null ? '' : level).replace(/\s+/g, '-');
+  }
+
   function levelClass(level) {
     if (level === '개선 필요') return 'sel-개선';
     if (level === '적정') return 'sel-적정';
@@ -586,9 +590,9 @@
     document.getElementById('note-input').value = item.비고 || '';
 
     ALL_LEVELS.forEach(function (lv) {
-      document.getElementById('level-' + lv).className = 'level-btn';
+      document.getElementById(levelButtonId(lv)).className = 'level-btn';
     });
-    const levelBtn = selectedLevel ? document.getElementById('level-' + selectedLevel) : null;
+    const levelBtn = selectedLevel ? document.getElementById(levelButtonId(selectedLevel)) : null;
     if (levelBtn) levelBtn.classList.add(levelClass(selectedLevel));
 
     renderSubSections(item);
@@ -703,9 +707,9 @@
 
   function renderItemScreen_levelOnly() {
     ALL_LEVELS.forEach(function (lv) {
-      document.getElementById('level-' + lv).className = 'level-btn';
+      document.getElementById(levelButtonId(lv)).className = 'level-btn';
     });
-    document.getElementById('level-' + selectedLevel).classList.add(levelClass(selectedLevel));
+    document.getElementById(levelButtonId(selectedLevel)).classList.add(levelClass(selectedLevel));
     renderSubSections(items[currentIndex]);
     updateNextButtonState();
   }
